@@ -8,19 +8,11 @@ class CreatePeliculasTable extends Migration
 {
     public function up()
     {
-        Schema::create('peliculas', function (Blueprint $table) {
-            $table->id();
-            $table->string('titulo');
-            $table->text('sinopsis')->nullable();
-            $table->integer('duracion')->nullable(); // minutos
-            $table->string('poster_url')->nullable();
-            $table->integer('tmdb_id')->nullable();
-            $table->timestamps();
-        });
+        // Migration moved to 2025_12_02_220000_create_peliculas_table.php
     }
 
     public function down()
     {
-        Schema::dropIfExists('peliculas');
+        // Migration moved to 2025_12_02_220000_create_peliculas_table.php
     }
 }
