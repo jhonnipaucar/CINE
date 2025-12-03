@@ -9,7 +9,13 @@ class Pelicula extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['titulo','sinopsis','duracion','poster_url','tmdb_id'];
+    protected $fillable = [
+        'titulo',
+        'sinopsis',
+        'duracion',
+        'poster_url',
+        'tmdb_id'
+    ];
 
     public function generos()
     {
@@ -21,3 +27,4 @@ class Pelicula extends Model
         return $this->hasMany(Funcion::class);
     }
 }
+
