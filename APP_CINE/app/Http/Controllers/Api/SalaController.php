@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Models\Sala;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+
 
 class SalaController extends Controller
 {
