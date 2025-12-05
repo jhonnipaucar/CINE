@@ -25,7 +25,7 @@ class ReservaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'funcion_id' => 'required|exists:funcions,id',
+            'funcion_id' => 'required|exists:funciones,id',
             'user_id' => 'required|exists:users,id',
             'asientos' => 'required|integer|min:1',
             'estado' => 'required|string',
