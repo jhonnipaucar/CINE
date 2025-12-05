@@ -15,7 +15,7 @@ return new class extends Migration
     $table->id();
     $table->foreignId('pelicula_id')->constrained('peliculas')->onDelete('cascade');
     $table->foreignId('sala_id')->constrained('salas')->onDelete('cascade');
-    $table->dateTime('fecha');
+    $table->dateTime('fecha')->nullable();
     $table->decimal('precio', 10, 2);
     $table->timestamps();
 });
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('funcions');
+        Schema::dropIfExists('funciones');
     }
 };

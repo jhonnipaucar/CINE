@@ -25,7 +25,7 @@ class FuncionController extends Controller
         $request->validate([
             'pelicula_id' => 'required|exists:peliculas,id',
             'sala_id' => 'required|exists:salas,id',
-            'fecha' => 'required|date',
+            'fecha' => 'required|date_format:Y-m-d H:i:s',
             'precio' => 'required|numeric'
         ]);
 
