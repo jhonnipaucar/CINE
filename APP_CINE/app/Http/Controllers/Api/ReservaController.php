@@ -5,17 +5,21 @@ namespace App\Http\Controllers\Api;
 use App\Models\Reserva;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-
+use Symfony\Component\HttpFoundation\Response;
 
 class ReservaController extends Controller
 {
-    public function index()
-    {
-        return response()->json(
-            Reserva::with(['funcion', 'user'])->get(),
-            200
-        );
+    public function index(Request $request)
+{
+    // 🚨 Bloque de seguridad para el rol 'admin'
+    if (auth()->user()->role !== 'admin') {
+        return response()->json(['message' => 'Acceso denegado. Se requiere rol de administrador.'], Response::HTTP_FORBIDDEN);
     }
+    
+    // Si es admin, lista todas las reservas
+    $reservas = Reserva::with('user', 'funcion')->get();
+    return response()->json($reservas);
+}
 
     public function create()
     {
@@ -25,7 +29,7 @@ class ReservaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'funcion_id' => 'required|exists:funcions,id',
+            'funcion_id' => 'required|exists:funciones,id',
             'user_id' => 'required|exists:users,id',
             'asientos' => 'required|integer|min:1',
             'estado' => 'required|string',
@@ -50,17 +54,24 @@ class ReservaController extends Controller
         //
     }
 
-    public function update(Request $request, $id)
-    {
-        $reserva = Reserva::find($id);
-
-        if (!$reserva) {
-            return response()->json(['message' => 'Reserva no encontrada'], 404);
-        }
-
-        $reserva->update($request->all());
-        return response()->json($reserva);
+    public function update(Request $request, Reserva $reserva)
+{
+    // 🚨 Bloque de seguridad para el rol 'admin'
+    if (auth()->user()->role !== 'admin') {
+        return response()->json(['message' => 'Acceso denegado. Se requiere rol de administrador.'], Response::HTTP_FORBIDDEN);
     }
+
+    // Validación para el cambio de estado
+    $request->validate(['status' => 'required|in:pendiente,aceptada,rechazada']);
+    
+    // Actualización
+    $reserva->update(['status' => $request->status]);
+
+    return response()->json([
+        'message' => 'Estado de reserva actualizado a ' . $reserva->status,
+        'reserva' => $reserva
+    ]);
+}
 
     public function destroy($id)
     {
