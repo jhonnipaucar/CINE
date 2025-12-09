@@ -20,3 +20,42 @@ Route::get('/register', function () {
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->name('dashboard');
+
+// Rutas protegidas (validadas por localStorage en el frontend)
+Route::get('/peliculas', function () {
+    return view('catalogo');
+})->name('peliculas');
+
+Route::get('/catalogo', function () {
+    return view('catalogo');
+})->name('catalogo');
+
+Route::get('/reservas', function () {
+    return view('reservas');
+})->name('reservas');
+
+Route::get('/generos', function () {
+    return view('generos');
+})->name('generos');
+
+Route::get('/funciones', function () {
+    return view('funciones');
+})->name('funciones');
+
+Route::get('/salas', function () {
+    return view('salas');
+})->name('salas');
+
+Route::get('/perfil', function () {
+    return view('perfil');
+})->name('perfil');
+
+// Rutas de Admin (protegidas con middleware IsAdmin)
+Route::middleware(['auth', 'verified', \App\Http\Middleware\IsAdmin::class])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/peliculas', function () {
+            return view('admin.peliculas');
+        })->name('peliculas');
+    });
