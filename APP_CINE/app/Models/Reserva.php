@@ -9,7 +9,11 @@ class Reserva extends Model
 {
     use HasFactory;
     
-    protected $fillable = ['user_id', 'funcion_id', 'asientos', 'estado', 'comentarios'];
+    protected $fillable = ['user_id', 'funcion_id', 'numero_asiento', 'asientos', 'precio', 'estado', 'comentarios'];
+
+    protected $casts = [
+        'asientos' => 'json',
+    ];
 
     public function user()
     {

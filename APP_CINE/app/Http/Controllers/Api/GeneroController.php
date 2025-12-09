@@ -9,7 +9,7 @@ class GeneroController extends Controller
 {
     public function index()
     {
-        return response()->json(Genero::all(), 200);
+        return response()->json(Genero::with('peliculas')->get(), 200);
     }
 
     public function create()
@@ -61,5 +61,18 @@ class GeneroController extends Controller
 
         $genero->delete();
         return response()->json(['message' => 'Género eliminado'], 200);
+    }
+
+    // Obtener películas de un género
+    public function peliculas($id)
+    {
+        $genero = Genero::find($id);
+
+        if (!$genero) {
+            return response()->json(['message' => 'Género no encontrado'], 404);
+        }
+
+        $peliculas = $genero->peliculas()->get();
+        return response()->json($peliculas, 200);
     }
 }

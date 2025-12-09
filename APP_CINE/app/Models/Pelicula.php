@@ -12,9 +12,13 @@ class Pelicula extends Model
     protected $fillable = [
         'titulo',
         'sinopsis',
+        'descripcion',
         'duracion',
         'poster_url',
-        'tmdb_id'
+        'url_imagen',
+        'tmdb_id',
+        'calificacion_tmdb',
+        'votos_tmdb'
     ];
 
     public function generos()
