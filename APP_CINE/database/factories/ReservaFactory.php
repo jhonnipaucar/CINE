@@ -2,21 +2,26 @@
 
 namespace Database\Factories;
 
-use App\Models\Reserva;
-use App\Models\User;
 use App\Models\Funcion;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Reserva>
+ */
 class ReservaFactory extends Factory
 {
-    protected $model = Reserva::class;
-
-    public function definition()
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
             'funcion_id' => Funcion::factory(),
-            'asientos' => $this->faker->numberBetween(1, 5),
+            'user_id' => User::factory(),
+            'asientos' => $this->faker->numberBetween(1, 6),
             'estado' => $this->faker->randomElement(['pendiente', 'confirmada', 'cancelada']),
             'comentarios' => $this->faker->optional()->sentence(),
         ];

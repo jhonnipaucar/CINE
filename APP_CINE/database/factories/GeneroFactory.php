@@ -2,19 +2,22 @@
 
 namespace Database\Factories;
 
-use App\Models\Genero;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Genero>
+ */
 class GeneroFactory extends Factory
 {
-    protected $model = Genero::class;
-
-    public function definition()
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
     {
-        $generos = ['Acción', 'Aventura', 'Terror', 'Comedia', 'Fantasía', 'Drama', 'Romance', 'Ciencia ficción'];
-
         return [
-            'nombre' => $this->faker->randomElement($generos),
+            'nombre' => $this->faker->unique()->words(2, true),
         ];
     }
 }

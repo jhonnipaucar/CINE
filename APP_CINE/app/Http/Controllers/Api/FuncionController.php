@@ -10,9 +10,9 @@ class FuncionController extends Controller
 {
     public function index()
     {
-        return response()->json(
-            Funcion::with(['pelicula', 'sala'])->get()
-        , 200);
+        return response()->json([
+            'data' => Funcion::with(['pelicula', 'sala'])->get()
+        ], 200);
     }
 
     public function create()

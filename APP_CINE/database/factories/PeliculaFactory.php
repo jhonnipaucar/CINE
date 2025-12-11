@@ -2,21 +2,25 @@
 
 namespace Database\Factories;
 
-use App\Models\Pelicula;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Pelicula>
+ */
 class PeliculaFactory extends Factory
 {
-    protected $model = Pelicula::class;
-
-    public function definition()
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
     {
         return [
-            'titulo' => $this->faker->words(3, true),
+            'titulo' => $this->faker->sentence(3),
             'sinopsis' => $this->faker->paragraph(),
-            'duracion' => $this->faker->numberBetween(90, 180),
-            'poster_url' => $this->faker->imageUrl(),
-            'tmdb_id' => $this->faker->randomNumber(),
+            'duracion' => $this->faker->numberBetween(80, 180),
+            'poster_url' => '/images/placeholder.jpg',
         ];
     }
 }

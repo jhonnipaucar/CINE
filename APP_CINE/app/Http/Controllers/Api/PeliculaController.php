@@ -2,129 +2,147 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\Pelicula; // Asegúrate de que el nombre del modelo sea correcto (Pelicula o Service)
+use App\Models\Pelicula;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use App\Http\Controllers\Controller;
+use App\Services\FirebaseService;
 
 class PeliculaController extends Controller
 {
     /**
-     * Muestra una lista de todas las películas (Catálogo Público).
-     * Ruta: GET /api/servicios
-     * Accesible por cualquier persona (pública).
+     * Obtener películas de base de datos local
      */
-    public function index(Request $request)
+    public function index()
     {
-        // Lógica de Búsqueda y Filtrado (Requisito del proyecto)
-        $query = Pelicula::query();
-
-        if ($request->filled('search')) {
-            $searchTerm = $request->input('search');
-            $query->where('title', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('description', 'like', '%' . $searchTerm . '%');
-        }
-
-        $peliculas = $query->latest()->get();
-
-        return response()->json($peliculas);
+        $peliculas = Pelicula::with('generos')->get();
+        return response()->json([
+            'data' => $peliculas
+        ], 200);
     }
 
-    /**
-     * Crea una nueva película (Servicio).
-     * Ruta: POST /api/servicios
-     * Protegida: Solo para el rol 'admin'.
-     */
+    public function create()
+    {
+        //
+    }
+
     public function store(Request $request)
-{
-    // 🚨 1. VERIFICACIÓN DE ROL
-    if (auth()->user()->role !== 'admin') {
-        return response()->json([
-            'message' => 'Acceso denegado. Se requiere rol de administrador.'
-        ], Response::HTTP_FORBIDDEN);
-    }
-
-    // 2. VALIDACIÓN (Crucial para que la petición POST funcione)
-    $request->validate([
-        'title' => 'required|string|max:255',
-        // ... otros campos
-        'image_url' => 'required|url',
-    ]);
-
-    // 3. CREACIÓN
-    $pelicula = Pelicula::create($request->all());
-
-    return response()->json([
-        'message' => 'Película creada con éxito.',
-        'pelicula' => $pelicula
-    ], Response::HTTP_CREATED);
-}
-
-    /**
-     * Muestra el detalle de una película específica.
-     * Ruta: GET /api/servicios/{id}
-     * Accesible por cualquier persona (pública).
-     */
-    public function show(Pelicula $pelicula)
     {
-        // Aquí podrías agregar la lógica para consumir la API externa (TMDb)
-        // y adjuntar los datos de actores o puntuación antes de retornar.
-
-        return response()->json($pelicula);
-    }
-
-    /**
-     * Actualiza una película existente.
-     * Ruta: PUT/PATCH /api/servicios/{id}
-     * Protegida: Solo para el rol 'admin'.
-     */
-    public function update(Request $request, Pelicula $pelicula)
-    {
-        // 1. VERIFICACIÓN DE ROL (Seguridad Crítica)
-        if (auth()->user()->role !== 'admin') {
-            return response()->json([
-                'message' => 'Acceso denegado. Se requiere rol de administrador.'
-            ], Response::HTTP_FORBIDDEN);
+        // Verificar si es admin
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'No tienes permiso para crear películas'], 403);
         }
 
-        // 2. VALIDACIÓN DE DATOS
         $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'price' => 'sometimes|numeric|min:0',
-            'image_url' => 'sometimes|url',
+            'titulo' => 'required|string|max:255',
+            'sinopsis' => 'required|string',
+            'duracion' => 'required|integer|min:1',
+            'url_imagen' => 'nullable|string|url'
         ]);
 
-        // 3. ACTUALIZACIÓN DEL RECURSO
-        $pelicula->update($request->all());
-
-        // 4. RESPUESTA
+        $pelicula = Pelicula::create($request->only(['titulo', 'sinopsis', 'duracion', 'url_imagen']));
+        
         return response()->json([
-            'message' => 'Película actualizada con éxito.',
-            'pelicula' => $pelicula
+            'data' => $pelicula->load('generos')
+        ], 201);
+    }
+
+    public function show($id)
+    {
+        $pelicula = Pelicula::with('generos')->find($id);
+        return $pelicula
+            ? response()->json([
+                'data' => $pelicula
+            ], 200)
+            : response()->json(['message' => 'Pelicula no encontrada'], 404);
+    }
+
+    public function edit($id)
+    {
+        //
+    }
+
+    public function update(Request $request, $id)
+    {
+        // Verificar si es admin
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'No tienes permiso para editar películas'], 403);
+        }
+
+        $pelicula = Pelicula::find($id);
+
+        if (!$pelicula) {
+            return response()->json(['message' => 'Pelicula no encontrada'], 404);
+        }
+
+        $request->validate([
+            'titulo' => 'string|max:255',
+            'sinopsis' => 'string',
+            'duracion' => 'integer|min:1',
+            'url_imagen' => 'nullable|string|url'
         ]);
+
+        $pelicula->update($request->only(['titulo', 'sinopsis', 'duracion', 'url_imagen']));
+        
+        return response()->json([
+            'data' => $pelicula->load('generos')
+        ], 200);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        // Verificar si es admin
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'No tienes permiso para eliminar películas'], 403);
+        }
+
+        $pelicula = Pelicula::find($id);
+
+        if (!$pelicula) {
+            return response()->json(['message' => 'Pelicula no encontrada'], 404);
+        }
+
+        $pelicula->delete();
+        return response()->json(['message' => 'Pelicula eliminada'], 200);
     }
 
     /**
-     * Elimina una película específica.
-     * Ruta: DELETE /api/servicios/{id}
-     * Protegida: Solo para el rol 'admin'.
+     * Carga una imagen de película a Firebase Storage
      */
-    public function destroy(Pelicula $pelicula)
+    public function uploadImage(Request $request, $id)
     {
-        // 1. VERIFICACIÓN DE ROL (Seguridad Crítica)
-        if (auth()->user()->role !== 'admin') {
-            return response()->json([
-                'message' => 'Acceso denegado. Se requiere rol de administrador.'
-            ], Response::HTTP_FORBIDDEN);
+        // Verificar si es admin
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'No tienes permiso para subir imágenes'], 403);
         }
 
-        // 2. ELIMINACIÓN DEL RECURSO
-        $pelicula->delete();
+        $pelicula = Pelicula::find($id);
 
-        // 3. RESPUESTA
-        return response()->json([
-            'message' => 'Película eliminada con éxito.'
-        ], Response::HTTP_NO_CONTENT); // 204 No Content es estándar para DELETE exitoso
+        if (!$pelicula) {
+            return response()->json(['message' => 'Película no encontrada'], 404);
+        }
+
+        $request->validate([
+            'imagen' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120' // 5MB máximo
+        ]);
+
+        try {
+            $firebaseService = new FirebaseService();
+            $url = $firebaseService->uploadImage($request->file('imagen'), 'peliculas');
+            
+            // Actualizar la URL en la base de datos
+            $pelicula->update(['url_imagen' => $url]);
+
+            return response()->json([
+                'message' => 'Imagen subida exitosamente',
+                'url' => $url,
+                'data' => $pelicula
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al subir la imagen',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
+

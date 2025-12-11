@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Api\PeliculaController;
 use App\Http\Controllers\Api\FuncionController;
 use App\Http\Controllers\Api\GeneroController;
@@ -9,58 +10,70 @@ use App\Http\Controllers\Api\ReservaController;
 use App\Http\Controllers\Api\SalaController;
 use App\Http\Controllers\Api\AuthController;
 
-// =========================================================
-// 1. RUTAS PÚBLICAS (Catálogo y Autenticación)
-// =========================================================
-
-Route::post('/auth/register', [AuthController::class, 'register']);
+// Rutas de autenticación (públicas)
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
-// Rutas de Catálogo (Listar y Detalle de Servicios/Películas)
-// Los servicios se deben poder explorar sin iniciar sesión 
-Route::get('/servicios', [PeliculaController::class, 'index']); // Catálogo
-Route::get('/servicios/{id}', [PeliculaController::class, 'show']); // Detalle
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
 
-// Si necesitas listar géneros o funciones públicas, van aquí:
-Route::get('/generos', [GeneroController::class, 'index']);
-Route::get('/funciones', [FuncionController::class, 'index']);
+Route::put('/user', function (Request $request) {
+    $user = $request->user();
+    $user->update($request->only(['name', 'phone', 'bio']));
+    return $user;
+})->middleware('auth:sanctum');
 
+Route::post('/change-password', function (Request $request) {
+    $request->validate([
+        'current_password' => 'required',
+        'password' => 'required|min:8|confirmed',
+    ]);
 
-// =========================================================
-// 2. RUTAS DE USUARIO AUTENTICADO (Crear Solicitudes)
-// Requiere Token. La verificación de rol 'admin' NO se aplica.
-// =========================================================
-Route::middleware('auth:sanctum')->group(function () {
+    $user = $request->user();
     
-    // Cierre de sesión
-    Route::post('/auth/logout', [AuthController::class, 'logout']);
+    if (!Hash::check($request->current_password, $user->password)) {
+        return response()->json(['message' => 'Current password is incorrect'], 401);
+    }
 
-    // Crear una solicitud de reserva/pedido/cita [cite: 47]
-    // Solo un usuario logueado puede crear reservas
-    Route::post('/reservas', [ReservaController::class, 'store']); 
-    
-    // El usuario también puede ver sus propias reservas (si implementaste la lógica en el controlador)
-    Route::get('/reservas/mis-reservas', [ReservaController::class, 'userIndex']); 
-});
+    $user->update([
+        'password' => Hash::make($request->password)
+    ]);
 
+    return response()->json(['message' => 'Password updated successfully']);
+})->middleware('auth:sanctum');
 
-// =========================================================
-// 3. RUTAS DE ADMINISTRADOR (CRUD y Gestión de Reservas)
-// Requiere Token Y la verificación de rol 'admin' en el controlador.
-// =========================================================
-Route::middleware('auth:sanctum')->group(function () {
+Route::delete('/user', function (Request $request) {
+    $user = $request->user();
+    $user->delete();
+    return response()->json(['message' => 'Account deleted successfully']);
+})->middleware('auth:sanctum');
 
-    // CRUD de Servicios/Películas [cite: 37]
-    Route::post('/servicios', [PeliculaController::class, 'store']); // Crear
-    Route::put('/servicios/{id}', [PeliculaController::class, 'update']); // Editar
-    Route::delete('/servicios/{id}', [PeliculaController::class, 'destroy']); // Eliminar
-    
-    // El administrador puede ver todas las solicitudes y cambiar su estado [cite: 52, 53]
-    Route::get('/reservas', [ReservaController::class, 'index']); // Listar TODAS
-    Route::patch('/reservas/{id}', [ReservaController::class, 'update']); // Cambiar estado
-    
-    // CRUD para otros recursos de Admin:
-    Route::apiResource('funciones', FuncionController::class)->except(['index', 'show']);
-    Route::apiResource('generos', GeneroController::class)->except(['index', 'show']);
-    Route::apiResource('salas', SalaController::class);
+// Rutas para Películas
+Route::apiResource('peliculas', PeliculaController::class);
+
+// Rutas para Géneros
+Route::get('/generos/{id}/peliculas', [GeneroController::class, 'peliculas']);
+Route::apiResource('generos', GeneroController::class);
+
+// Rutas para Películas
+Route::post('/peliculas/{id}/upload-imagen', [PeliculaController::class, 'uploadImage'])->middleware('auth:sanctum');
+Route::apiResource('peliculas', PeliculaController::class);
+
+// Rutas para Salas
+Route::apiResource('salas', SalaController::class);
+
+// Rutas para Funciones
+Route::apiResource('funciones', FuncionController::class);
+
+// Rutas para Reservas (protegidas)
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::apiResource('reservas', ReservaController::class);
+
+    // Rutas Admin para Reservas (protegidas)
+    Route::get('/admin/reservas', [ReservaController::class, 'getAllReservas']);
+    Route::post('/admin/reservas/{id}/aprobar', [ReservaController::class, 'approveReserva']);
+    Route::post('/admin/reservas/{id}/rechazar', [ReservaController::class, 'rejectReserva']);
+    Route::delete('/admin/reservas/{id}', [ReservaController::class, 'deleteReserva']);
 });

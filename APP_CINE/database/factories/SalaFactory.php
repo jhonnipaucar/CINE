@@ -2,18 +2,23 @@
 
 namespace Database\Factories;
 
-use App\Models\Sala;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Sala>
+ */
 class SalaFactory extends Factory
 {
-    protected $model = Sala::class;
-
-    public function definition()
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
     {
         return [
-            'nombre' => 'Sala ' . $this->faker->numberBetween(1, 10),
-            'capacidad' => $this->faker->numberBetween(40, 100),
+            'nombre' => 'Sala ' . $this->faker->numerify('##'),
+            'capacidad' => $this->faker->numberBetween(50, 200),
         ];
     }
 }

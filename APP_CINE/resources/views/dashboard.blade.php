@@ -140,6 +140,10 @@
             line-height: 1.5;
         }
 
+        .menu-card.hidden {
+            display: none;
+        }
+
         @media (max-width: 768px) {
             .navbar {
                 flex-direction: column;
@@ -183,40 +187,46 @@
         </div>
 
         <div class="menu-grid">
-            <a href="#" onclick="handleNavigation(event, 'movies')" class="menu-card">
+            <a href="{{ route('peliculas') }}" class="menu-card">
                 <div class="menu-card-icon">🎥</div>
                 <h3>Películas</h3>
                 <p>Explora el catálogo de películas disponibles</p>
             </a>
 
-            <a href="#" onclick="handleNavigation(event, 'reservations')" class="menu-card">
+            <a href="{{ route('reservas') }}" class="menu-card">
                 <div class="menu-card-icon">🎟️</div>
                 <h3>Mis Reservas</h3>
                 <p>Gestiona tus reservas y entradas</p>
             </a>
 
-            <a href="#" onclick="handleNavigation(event, 'showtimes')" class="menu-card">
+            <a href="{{ route('funciones') }}" class="menu-card">
                 <div class="menu-card-icon">⏰</div>
                 <h3>Funciones</h3>
                 <p>Ver las funciones disponibles</p>
             </a>
 
-            <a href="#" onclick="handleNavigation(event, 'rooms')" class="menu-card">
+            <a href="{{ route('salas') }}" class="menu-card">
                 <div class="menu-card-icon">🎭</div>
                 <h3>Salas</h3>
                 <p>Consulta las salas del cine</p>
             </a>
 
-            <a href="#" onclick="handleNavigation(event, 'genres')" class="menu-card">
+            <a href="{{ route('generos') }}" class="menu-card">
                 <div class="menu-card-icon">🎞️</div>
                 <h3>Géneros</h3>
                 <p>Filtra películas por género</p>
             </a>
 
-            <a href="#" onclick="handleNavigation(event, 'profile')" class="menu-card">
+            <a href="{{ route('perfil') }}" class="menu-card">
                 <div class="menu-card-icon">👤</div>
                 <h3>Mi Perfil</h3>
                 <p>Actualiza tu información personal</p>
+            </a>
+
+            <a href="{{ route('admin.peliculas') }}" id="adminLink" class="menu-card hidden">
+                <div class="menu-card-icon">⚙️</div>
+                <h3>Gestión Admin</h3>
+                <p>Administra películas y contenido</p>
             </a>
         </div>
     </div>
@@ -245,6 +255,11 @@
                     
                     const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
                     document.getElementById('userInitial').textContent = initials;
+
+                    // Mostrar enlace admin si es admin
+                    if (user.role === 'admin') {
+                        document.getElementById('adminLink').classList.remove('hidden');
+                    }
                 } catch (error) {
                     console.error('Error parsing user data:', error);
                 }
@@ -274,11 +289,6 @@
                     window.location.href = '{{ route('login') }}';
                 });
             }
-        }
-
-        function handleNavigation(event, section) {
-            event.preventDefault();
-            alert(`Sección "${section}" en desarrollo. Próximamente disponible.`);
         }
 
         // Verificar autenticación al cargar la página
