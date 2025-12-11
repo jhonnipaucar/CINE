@@ -496,6 +496,8 @@
         // Cargar películas
         async function cargarPeliculas() {
             try {
+                // Cargar películas de la BD local
+                const response = await fetch(`${API_URL}/peliculas`);
                 // Cargar películas de TMDB
                 const response = await fetch(`${API_URL}/peliculas-tmdb?type=popular&page=1`);
                 const data = await response.json();
@@ -504,6 +506,13 @@
                     peliculasOriginal = data.data || [];
                     peliculasActuales = peliculasOriginal;
 
+                    mostrarPeliculas(peliculasActuales);
+                } else {
+                    mostrarError('Error al cargar películas');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión');
                     // Cargar géneros de TMDB
                     try {
                         const genresResponse = await fetch(`${API_URL}/tmdb/generos`);

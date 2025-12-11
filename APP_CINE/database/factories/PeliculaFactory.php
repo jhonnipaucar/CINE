@@ -20,7 +20,7 @@ class PeliculaFactory extends Factory
             'titulo' => $this->faker->sentence(3),
             'sinopsis' => $this->faker->paragraph(),
             'duracion' => $this->faker->numberBetween(80, 180),
-            'poster_url' => $this->faker->imageUrl(300, 450, 'movies', true),
+            'poster_url' => '/images/placeholder.jpg',
         ];
     }
 }

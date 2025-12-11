@@ -313,6 +313,7 @@
                 ? pelicula.generos.map(g => g.nombre).join(', ')
                 : 'Sin género asignado';
 
+            // Mostrar imagen
             // Mostrar calificación TMDb si disponible
             const calificacionDiv = document.getElementById('calificacionTMDb');
             if (pelicula.calificacion_tmdb) {

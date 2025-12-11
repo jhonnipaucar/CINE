@@ -51,6 +51,7 @@ Route::delete('/user', function (Request $request) {
     return response()->json(['message' => 'Account deleted successfully']);
 })->middleware('auth:sanctum');
 
+// Rutas para Películas
 // Rutas para TMDb (públicas - sin autenticación requerida) - ANTES que apiResource
 Route::get('/peliculas-tmdb', [PeliculaController::class, 'indexTMDB']);
 Route::get('/peliculas-tmdb/search', [PeliculaController::class, 'searchTMDB']);
@@ -66,11 +67,23 @@ Route::post('/peliculas/{id}/upload-imagen', [PeliculaController::class, 'upload
 Route::get('/generos/{id}/peliculas', [GeneroController::class, 'peliculas']);
 Route::apiResource('generos', GeneroController::class);
 
+// Rutas para Películas
+Route::post('/peliculas/{id}/upload-imagen', [PeliculaController::class, 'uploadImage'])->middleware('auth:sanctum');
+Route::apiResource('peliculas', PeliculaController::class);
+
 // Rutas para Salas
 Route::apiResource('salas', SalaController::class);
 
 // Rutas para Funciones
 Route::apiResource('funciones', FuncionController::class);
 
-// Rutas para Reservas
-Route::apiResource('reservas', ReservaController::class);
+// Rutas para Reservas (protegidas)
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::apiResource('reservas', ReservaController::class);
+
+    // Rutas Admin para Reservas (protegidas)
+    Route::get('/admin/reservas', [ReservaController::class, 'getAllReservas']);
+    Route::post('/admin/reservas/{id}/aprobar', [ReservaController::class, 'approveReserva']);
+    Route::post('/admin/reservas/{id}/rechazar', [ReservaController::class, 'rejectReserva']);
+    Route::delete('/admin/reservas/{id}', [ReservaController::class, 'deleteReserva']);
+});

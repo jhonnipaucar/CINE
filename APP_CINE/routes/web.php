@@ -50,6 +50,14 @@ Route::get('/perfil', function () {
     return view('perfil');
 })->name('perfil');
 
+// Rutas de Admin (sin middleware, el control se hace en JavaScript con token)
+Route::get('/admin/peliculas', function () {
+    return view('admin.peliculas');
+})->name('admin.peliculas');
+
+Route::get('/admin/reservas', function () {
+    return view('admin.reservas');
+})->name('admin.reservas');
 // Rutas de Admin (protegidas con middleware IsAdmin)
 Route::middleware(['auth', 'verified', \App\Http\Middleware\IsAdmin::class])
     ->prefix('admin')

@@ -11,7 +11,7 @@ class FuncionController extends Controller
     public function index()
     {
         return response()->json([
-            'data' => Funcion::with(['pelicula', 'sala', 'reservas'])->get()
+            'data' => Funcion::with(['pelicula', 'sala'])->get()
         ], 200);
     }
 

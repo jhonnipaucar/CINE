@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'credentials' => env('FIREBASE_CREDENTIALS', 'storage/firebase/credentials.json'),
+    'storage_bucket' => env('FIREBASE_STORAGE_BUCKET'),
     'api_key' => env('FIREBASE_API_KEY', ''),
     'auth_domain' => env('FIREBASE_AUTH_DOMAIN', ''),
     'project_id' => env('FIREBASE_PROJECT_ID', ''),

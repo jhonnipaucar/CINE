@@ -50,6 +50,17 @@
 
     <!-- Contenido Principal -->
     <div class="max-w-7xl mx-auto p-6">
+        <!-- Encabezado con botones -->
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+            <h2 class="text-3xl font-bold text-gray-800">Películas</h2>
+            <div class="flex gap-3 flex-wrap">
+                <a href="/admin/reservas" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition shadow-md">
+                    📋 Gestionar Reservas
+                </a>
+                <button onclick="abrirFormularioCrear()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition shadow-md">
+                    + Nueva Película
+                </button>
+            </div>
         <!-- Encabezado con botón crear -->
         <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
             <h2 class="text-3xl font-bold text-gray-800">Películas</h2>
@@ -210,6 +221,7 @@
                         class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition disabled:opacity-50"
                         disabled
                     >
+                        📤 Subir Imagen
                         📤 Subir Imagen a Firebase Storage
                     </button>
                     <p id="estadoUpload" class="text-sm text-gray-600 mt-2"></p>
@@ -567,6 +579,36 @@
             });
         }
 
+        // Subir imagen a Firebase
+        async function subirImagen() {
+            const archivoInput = document.getElementById('imagenFile');
+            const btnSubir = document.getElementById('btnSubirImagen');
+            const estadoUpload = document.getElementById('estadoUpload');
+            const token = localStorage.getItem('auth_token');
+            const peliculaId = document.getElementById('peliculaId').value;
+
+            if (!archivoInput.files[0]) {
+                alert('Por favor selecciona una imagen');
+                return;
+            }
+
+            if (!peliculaId) {
+                alert('Debe guardar la película primero');
+                return;
+            }
+
+            btnSubir.disabled = true;
+            btnSubir.textContent = '⏳ Subiendo...';
+            estadoUpload.innerHTML = '⏳ Subiendo imagen a Firebase...';
+
+            try {
+                const formData = new FormData();
+                formData.append('imagen', archivoInput.files[0]);
+
+                const response = await fetch(`/api/peliculas/${peliculaId}/upload-imagen`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
         // Subir imagen a Firebase Storage
         async function subirImagen() {
             const archivoInput = document.getElementById('imagenFile');
@@ -624,6 +666,11 @@
 
                 if (response.ok) {
                     estadoUpload.innerHTML = `✅ ${data.message}`;
+                    document.getElementById('url_imagen').value = data.url;
+                    document.getElementById('imagenPreview').src = data.url;
+                    document.getElementById('previewImagen').classList.remove('hidden');
+                    archivoInput.value = ''; // Limpiar input
+                    alert('Imagen subida correctamente a Firebase Storage');
                     document.getElementById('url_imagen').value = data.data.url;
                     document.getElementById('imagenPreview').src = data.data.url;
                     document.getElementById('previewImagen').classList.remove('hidden');

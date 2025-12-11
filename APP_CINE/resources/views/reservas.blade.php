@@ -372,6 +372,27 @@
 
         // Cargar funciones disponibles
         async function cargarFunciones() {
+            document.getElementById('loaderFunciones').classList.remove('hidden');
+            document.getElementById('listadoFunciones').classList.add('hidden');
+            
+            try {
+                console.log('Cargando funciones desde:', API_URL + '/funciones');
+                const response = await fetch(`${API_URL}/funciones`);
+                
+                console.log('Respuesta status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Funciones cargadas:', data);
+
+                funciones = data.data || data;
+                mostrarFunciones();
+            } catch (error) {
+                console.error('Error al cargar funciones:', error);
+                mostrarErrorFunciones('Error: ' + error.message);
             try {
                 const response = await fetch(`${API_URL}/funciones`);
                 const data = await response.json();
@@ -392,6 +413,7 @@
         function mostrarFunciones() {
             const contenedor = document.getElementById('listadoFunciones');
             
+            if (!funciones || funciones.length === 0) {
             if (funciones.length === 0) {
                 contenedor.innerHTML = '<p class="text-gray-600">No hay funciones disponibles</p>';
                 contenedor.classList.remove('hidden');
@@ -399,6 +421,19 @@
                 return;
             }
 
+            contenedor.innerHTML = funciones.map((funcion, index) => {
+                return `
+                    <div class="funcion-card" onclick="seleccionarFuncion(${index})">
+                        <h3 class="font-bold text-gray-800 mb-2">${funcion.pelicula.titulo}</h3>
+                        <div class="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
+                            <div>📅 ${new Date(funcion.fecha).toLocaleDateString('es-ES')}</div>
+                            <div>🕐 ${new Date(funcion.fecha).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}</div>
+                            <div>🪑 ${funcion.sala.nombre}</div>
+                            <div>💵 $${parseFloat(funcion.precio).toFixed(2)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
             contenedor.innerHTML = funciones.map((funcion, index) => `
                 <div class="funcion-card" onclick="seleccionarFuncion(${index})">
                     <h3 class="font-bold text-gray-800 mb-2">${funcion.pelicula.titulo}</h3>
@@ -533,15 +568,35 @@
                 estado: 'confirmada'
             };
 
+            const token = localStorage.getItem('auth_token');
+
+            if (!token) {
+                alert('Debes estar logueado para hacer una reserva');
+                window.location.href = '{{ route('login') }}';
+                return;
+            }
+
+            try {
+                console.log('Enviando reserva a:', `${API_URL}/reservas`);
+                console.log('Datos:', datos);
+
             try {
                 const response = await fetch(`${API_URL}/reservas`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(datos)
                 });
+
+                console.log('Respuesta status:', response.status);
+
+                const data = await response.json();
+
+                console.log('Datos de respuesta:', data);
 
                 const data = await response.json();
 
@@ -555,6 +610,8 @@
                     alert('Error: ' + (data.message || 'Error desconocido'));
                 }
             } catch (error) {
+                console.error('Error completo:', error);
+                alert('Error de conexión: ' + error.message);
                 console.error('Error:', error);
                 alert('Error de conexión');
             }
