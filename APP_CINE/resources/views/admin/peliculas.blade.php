@@ -61,6 +61,12 @@
                     + Nueva Película
                 </button>
             </div>
+        <!-- Encabezado con botón crear -->
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+            <h2 class="text-3xl font-bold text-gray-800">Películas</h2>
+            <button onclick="abrirFormularioCrear()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition shadow-md">
+                + Nueva Película
+            </button>
         </div>
 
         <!-- Buscador -->
@@ -72,6 +78,36 @@
                 onkeyup="filtrarPeliculas()"
                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
             >
+        </div>
+
+        <!-- Búsqueda en TMDb -->
+        <div class="mb-6 bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-yellow-900 mb-4">🌐 Buscar Películas en TMDb</h3>
+            <div class="flex gap-2 flex-wrap">
+                <input 
+                    type="text" 
+                    id="tmdbBuscador"
+                    placeholder="Buscar en TMDb..."
+                    class="flex-1 min-w-48 px-4 py-2 border-2 border-yellow-300 rounded-lg focus:outline-none focus:border-yellow-600"
+                >
+                <button 
+                    onclick="buscarEnTMDb()"
+                    class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-semibold transition"
+                >
+                    🔍 Buscar
+                </button>
+                <button 
+                    onclick="cargarPopularesTMDb()"
+                    class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-semibold transition"
+                >
+                    ⭐ Populares
+                </button>
+            </div>
+            <div id="resultadosTMDb" class="hidden mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+            <div id="loaderTMDb" class="hidden text-center mt-4">
+                <div class="loader mx-auto"></div>
+                <p class="text-yellow-700 mt-2">Buscando en TMDb...</p>
+            </div>
         </div>
 
         <!-- Mensaje de error -->
@@ -186,6 +222,7 @@
                         disabled
                     >
                         📤 Subir Imagen
+                        📤 Subir Imagen a Firebase Storage
                     </button>
                     <p id="estadoUpload" class="text-sm text-gray-600 mt-2"></p>
                 </div>
@@ -572,6 +609,55 @@
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`
+        // Subir imagen a Firebase Storage
+        async function subirImagen() {
+            const archivoInput = document.getElementById('imagenFile');
+            const archivo = archivoInput.files[0];
+
+            if (!archivo) {
+                alert('Selecciona un archivo');
+                return;
+            }
+
+            // Validar tipo de archivo
+            const tiposPermitidos = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!tiposPermitidos.includes(archivo.type)) {
+                alert('Tipo de archivo no permitido. Solo JPEG, PNG, GIF o WebP.');
+                return;
+            }
+
+            // Validar tamaño (5MB)
+            if (archivo.size > 5 * 1024 * 1024) {
+                alert('El archivo es demasiado grande. Máximo 5MB.');
+                return;
+            }
+
+            const btnSubir = document.getElementById('btnSubirImagen');
+            const estadoUpload = document.getElementById('estadoUpload');
+            
+            btnSubir.disabled = true;
+            btnSubir.textContent = '⏳ Subiendo...';
+            estadoUpload.textContent = 'Subiendo imagen...';
+
+            try {
+                const formData = new FormData();
+                formData.append('imagen', archivo);
+
+                const url = peliculaEnEdicion 
+                    ? `${API_URL}/peliculas/${peliculaEnEdicion.id}/upload-imagen`
+                    : null;
+
+                if (!url) {
+                    estadoUpload.textContent = '❌ Guarda la película primero antes de subir imagen';
+                    btnSubir.disabled = false;
+                    btnSubir.textContent = '📤 Subir Imagen a Firebase Storage';
+                    return;
+                }
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
                     },
                     body: formData
                 });
@@ -585,6 +671,11 @@
                     document.getElementById('previewImagen').classList.remove('hidden');
                     archivoInput.value = ''; // Limpiar input
                     alert('Imagen subida correctamente a Firebase Storage');
+                    document.getElementById('url_imagen').value = data.data.url;
+                    document.getElementById('imagenPreview').src = data.data.url;
+                    document.getElementById('previewImagen').classList.remove('hidden');
+                    archivoInput.value = ''; // Limpiar input
+                    alert('Imagen subida correctamente');
                 } else {
                     estadoUpload.innerHTML = `❌ Error: ${data.message}`;
                     alert('Error: ' + (data.message || 'Error desconocido'));

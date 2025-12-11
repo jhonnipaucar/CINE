@@ -498,6 +498,8 @@
             try {
                 // Cargar películas de la BD local
                 const response = await fetch(`${API_URL}/peliculas`);
+                // Cargar películas de TMDB
+                const response = await fetch(`${API_URL}/peliculas-tmdb?type=popular&page=1`);
                 const data = await response.json();
 
                 if (response.ok) {
@@ -511,6 +513,31 @@
             } catch (error) {
                 console.error('Error:', error);
                 mostrarError('Error de conexión');
+                    // Cargar géneros de TMDB
+                    try {
+                        const genresResponse = await fetch(`${API_URL}/tmdb/generos`);
+                        const genresData = await genresResponse.json();
+                        generosDisponibles = genresData.data || [];
+
+                        // Llenar select de géneros
+                        const selectGenero = document.getElementById('filtroGenero');
+                        generosDisponibles.forEach(gen => {
+                            const option = document.createElement('option');
+                            option.value = gen.id;
+                            option.textContent = gen.name;
+                            selectGenero.appendChild(option);
+                        });
+                    } catch (genreError) {
+                        console.warn('Error cargando géneros:', genreError);
+                    }
+
+                    mostrarPeliculas(peliculasActuales);
+                } else {
+                    mostrarError('Error al cargar películas de TMDB');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión con TMDB');
             }
         }
 

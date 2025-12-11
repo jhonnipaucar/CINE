@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Pelicula;
+use App\Services\FirebaseStorageService;
+use App\Services\TMDbService;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Services\FirebaseService;

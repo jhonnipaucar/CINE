@@ -93,6 +93,12 @@ class ReservaController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
+
+        // Verificar que el usuario sea el dueño de la reserva
+        if ($reserva->user_id !== $user->id && $user->role !== 'admin') {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
         return response()->json([
             'data' => $reserva
         ], 200);
@@ -219,37 +225,42 @@ class ReservaController extends Controller
             return response()->json(['message' => 'Reserva no encontrada'], 404);
         }
 
-        $razon = $request->razon ?? 'Rechazada por el administrador';
-        $reserva->update([
-            'estado' => 'rechazada',
-            'comentarios' => $razon
-        ]);
-
-        return response()->json([
-            'message' => 'Reserva rechazada',
-            'data' => $reserva
-        ], 200);
-    }
-
-    /**
-     * Eliminar una reserva (admin)
-     */
-    public function deleteReserva(Request $request, $id)
-    {
-        if ($request->user()->role !== 'admin') {
+        // Verificar autorización
+        if ($reserva->user_id !== $user->id && $user->role !== 'admin') {
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
+        $reserva->update($request->only('estado'));
+
+        return response()->json([
+            'data' => $reserva,
+            'message' => 'Reserva actualizada'
+        ], 200);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $user = $request->user();
         $reserva = Reserva::find($id);
 
         if (!$reserva) {
             return response()->json(['message' => 'Reserva no encontrada'], 404);
         }
 
-        $reserva->delete();
+        // Verificar autorización
+        if ($reserva->user_id !== $user->id && $user->role !== 'admin') {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        // Solo permitir cancelación si está confirmada o pendiente
+        if (!in_array($reserva->estado, ['pendiente', 'confirmada'])) {
+            return response()->json(['message' => 'No se puede cancelar una reserva ' . $reserva->estado], 422);
+        }
+
+        $reserva->update(['estado' => 'cancelada']);
 
         return response()->json([
-            'message' => 'Reserva eliminada'
+            'message' => 'Reserva cancelada'
         ], 200);
     }
 }

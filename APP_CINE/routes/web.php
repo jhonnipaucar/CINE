@@ -58,3 +58,12 @@ Route::get('/admin/peliculas', function () {
 Route::get('/admin/reservas', function () {
     return view('admin.reservas');
 })->name('admin.reservas');
+// Rutas de Admin (protegidas con middleware IsAdmin)
+Route::middleware(['auth', 'verified', \App\Http\Middleware\IsAdmin::class])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/peliculas', function () {
+            return view('admin.peliculas');
+        })->name('peliculas');
+    });

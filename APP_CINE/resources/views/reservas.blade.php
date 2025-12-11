@@ -393,6 +393,19 @@
             } catch (error) {
                 console.error('Error al cargar funciones:', error);
                 mostrarErrorFunciones('Error: ' + error.message);
+            try {
+                const response = await fetch(`${API_URL}/funciones`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    funciones = data.data || data;
+                    mostrarFunciones();
+                } else {
+                    mostrarErrorFunciones('Error al cargar funciones');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarErrorFunciones('Error de conexión');
             }
         }
 
@@ -401,6 +414,7 @@
             const contenedor = document.getElementById('listadoFunciones');
             
             if (!funciones || funciones.length === 0) {
+            if (funciones.length === 0) {
                 contenedor.innerHTML = '<p class="text-gray-600">No hay funciones disponibles</p>';
                 contenedor.classList.remove('hidden');
                 document.getElementById('loaderFunciones').classList.add('hidden');
@@ -420,6 +434,20 @@
                     </div>
                 `;
             }).join('');
+            contenedor.innerHTML = funciones.map((funcion, index) => `
+                <div class="funcion-card" onclick="seleccionarFuncion(${index})">
+                    <h3 class="font-bold text-gray-800 mb-2">${funcion.pelicula.titulo}</h3>
+                    <div class="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
+                        <div>📅 ${new Date(funcion.fecha).toLocaleDateString('es-ES')}</div>
+                        <div>🕐 ${funcion.hora}</div>
+                        <div>🪑 Sala ${funcion.sala.numero}</div>
+                        <div>💵 $${parseFloat(funcion.precio).toFixed(2)}</div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        ${funcion.asientos_disponibles} asientos disponibles
+                    </div>
+                </div>
+            `).join('');
 
             contenedor.classList.remove('hidden');
             document.getElementById('loaderFunciones').classList.add('hidden');
@@ -552,12 +580,14 @@
                 console.log('Enviando reserva a:', `${API_URL}/reservas`);
                 console.log('Datos:', datos);
 
+            try {
                 const response = await fetch(`${API_URL}/reservas`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(datos)
                 });
@@ -567,6 +597,8 @@
                 const data = await response.json();
 
                 console.log('Datos de respuesta:', data);
+
+                const data = await response.json();
 
                 if (response.ok) {
                     mostrarExito(`Asientos: ${asientosSeleccionados.join(', ')}`);
@@ -580,6 +612,8 @@
             } catch (error) {
                 console.error('Error completo:', error);
                 alert('Error de conexión: ' + error.message);
+                console.error('Error:', error);
+                alert('Error de conexión');
             }
         }
 

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\GeneroController;
 use App\Http\Controllers\Api\ReservaController;
 use App\Http\Controllers\Api\SalaController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\TMDbController;
 
 // Rutas de autenticación (públicas)
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -51,7 +52,16 @@ Route::delete('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // Rutas para Películas
+// Rutas para TMDb (públicas - sin autenticación requerida) - ANTES que apiResource
+Route::get('/peliculas-tmdb', [PeliculaController::class, 'indexTMDB']);
+Route::get('/peliculas-tmdb/search', [PeliculaController::class, 'searchTMDB']);
+Route::get('/peliculas-tmdb/{id}', [PeliculaController::class, 'showTMDB']);
+Route::get('/tmdb/generos', [PeliculaController::class, 'genresTMDB']);
+Route::get('/tmdb/generos/{genreId}/peliculas', [PeliculaController::class, 'genreMoviesTMDB']);
+
+// Rutas para Películas (DESPUÉS de rutas TMDB)
 Route::apiResource('peliculas', PeliculaController::class);
+Route::post('/peliculas/{id}/upload-imagen', [PeliculaController::class, 'uploadImage'])->middleware('auth:sanctum');
 
 // Rutas para Géneros
 Route::get('/generos/{id}/peliculas', [GeneroController::class, 'peliculas']);
