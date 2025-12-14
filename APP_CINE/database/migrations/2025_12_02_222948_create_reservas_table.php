@@ -18,7 +18,6 @@ return new class extends Migration
     $table->integer('asientos')->default(1);
     $table->string('estado')->default('pendiente');
     $table->text('comentarios')->nullable();
-    $table->timestamps();
 });
 
     }

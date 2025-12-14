@@ -53,6 +53,7 @@
     <nav class="bg-gradient-to-r from-blue-600 to-purple-700 text-white p-4 shadow-lg sticky top-0 z-40">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
+                <button onclick="window.history.back()" class="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded-lg transition text-sm">← Atrás</button>
                 <a href="{{ route('dashboard') }}" class="text-2xl hover:opacity-80 transition">🎬</a>
                 <h1 class="text-xl font-bold">CINE App - Películas</h1>
             </div>
@@ -144,15 +145,6 @@
                     <!-- Información -->
                     <div>
                         <h2 id="detalleTitulo" class="text-2xl font-bold text-gray-800 mb-4"></h2>
-                        
-                        <!-- Calificación TMDb -->
-                        <div id="calificacionTMDb" class="hidden mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                            <label class="block text-gray-700 font-semibold mb-2">Calificación IMDb/TMDb</label>
-                            <div class="flex items-center gap-2">
-                                <span id="detalleCalificacion" class="text-2xl font-bold text-yellow-500">⭐</span>
-                                <span id="detalleVotos" class="text-gray-600"></span>
-                            </div>
-                        </div>
 
                         <div class="mb-4">
                             <label class="block text-gray-700 font-semibold mb-2">Género</label>
@@ -259,7 +251,6 @@
                     <div class="tarjeta-pelicula bg-white rounded-lg shadow-md overflow-hidden" onclick="verDetalle(${pelicula.id})">
                         <div class="w-full h-48 bg-gray-200 overflow-hidden imagen-placeholder relative">
                             ${pelicula.url_imagen ? `<img src="${pelicula.url_imagen}" alt="${pelicula.titulo}" class="w-full h-full object-cover">` : '🎬'}
-                            ${pelicula.calificacion_tmdb ? `<div class="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-lg text-sm font-bold">⭐ ${pelicula.calificacion_tmdb}</div>` : ''}
                         </div>
                         <div class="p-4">
                             <h3 class="text-lg font-bold text-gray-800 mb-2 line-clamp-2">${pelicula.titulo}</h3>
@@ -270,7 +261,6 @@
                                     ${pelicula.generos && pelicula.generos.length > 0 ? pelicula.generos[0].nombre : 'Sin género'}
                                 </span>
                             </div>
-                            ${pelicula.votos_tmdb ? `<p class="text-xs text-gray-500 mb-3">${pelicula.votos_tmdb.toLocaleString()} votos</p>` : ''}
                             <button class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
                                 Ver Detalles
                             </button>
@@ -314,16 +304,6 @@
                 : 'Sin género asignado';
 
             // Mostrar imagen
-            // Mostrar calificación TMDb si disponible
-            const calificacionDiv = document.getElementById('calificacionTMDb');
-            if (pelicula.calificacion_tmdb) {
-                document.getElementById('detalleCalificacion').textContent = `⭐ ${pelicula.calificacion_tmdb}`;
-                document.getElementById('detalleVotos').textContent = `${pelicula.votos_tmdb ? pelicula.votos_tmdb.toLocaleString() + ' votos' : 'Calificación de TMDb'}`;
-                calificacionDiv.classList.remove('hidden');
-            } else {
-                calificacionDiv.classList.add('hidden');
-            }
-
             if (pelicula.url_imagen) {
                 document.getElementById('imagenDetalle').innerHTML = `<img src="${pelicula.url_imagen}" alt="${pelicula.titulo}" class="w-full h-full object-cover">`;
             } else {

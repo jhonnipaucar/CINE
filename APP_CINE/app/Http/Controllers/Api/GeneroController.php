@@ -9,7 +9,9 @@ class GeneroController extends Controller
 {
     public function index()
     {
-        return response()->json(Genero::with('peliculas')->get(), 200);
+        return response()->json([
+            'data' => Genero::withCount('peliculas')->get()
+        ], 200);
     }
 
     public function create()
@@ -72,7 +74,7 @@ class GeneroController extends Controller
             return response()->json(['message' => 'Género no encontrado'], 404);
         }
 
-        $peliculas = $genero->peliculas()->get();
+        $peliculas = $genero->peliculas()->with('generos')->get();
         return response()->json($peliculas, 200);
     }
 }

@@ -9,11 +9,15 @@ class Funcion extends Model
 {
     use HasFactory;
     
+    public $timestamps = false;
     protected $table = 'funciones';
     protected $fillable = ['pelicula_id', 'sala_id', 'fecha', 'hora', 'precio'];
     protected $casts = [
         'fecha' => 'datetime',
     ];
+    
+    // Agregar el atributo calculado a la respuesta JSON
+    protected $appends = ['asientos_disponibles'];
 
     public function pelicula()
     {
@@ -33,10 +37,10 @@ class Funcion extends Model
     // Accesores
     public function getAsientosDisponiblesAttribute()
     {
-        // Total de asientos en la sala (8 filas x 12 columnas = 96)
-        $totalAsientos = 96;
+        // Obtener la capacidad de la sala
+        $capacidad = $this->sala?->capacidad ?? 0;
         $asientosReservados = $this->reservas()->count();
-        return $totalAsientos - $asientosReservados;
+        return $capacidad - $asientosReservados;
     }
 }
 

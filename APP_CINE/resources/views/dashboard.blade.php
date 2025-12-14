@@ -165,6 +165,7 @@
     <!-- Navbar -->
     <div class="navbar">
         <div class="navbar-left">
+            <button onclick="window.history.back()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-right: 10px; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">← Atrás</button>
             🎬 CINE App
         </div>
         <div class="navbar-right">
@@ -223,7 +224,7 @@
                 <p>Actualiza tu información personal</p>
             </a>
 
-            <a href="{{ route('admin.peliculas') }}" id="adminLink" class="menu-card hidden">
+            <a href="/admin" id="adminLink" class="menu-card hidden">
                 <div class="menu-card-icon">⚙️</div>
                 <h3>Gestión Admin</h3>
                 <p>Administra películas y contenido</p>

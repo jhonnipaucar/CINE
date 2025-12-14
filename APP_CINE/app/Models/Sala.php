@@ -9,6 +9,7 @@ class Sala extends Model
 {
     use HasFactory;
     
+    public $timestamps = false;
     protected $fillable = ['nombre', 'capacidad'];
 
     public function funciones()

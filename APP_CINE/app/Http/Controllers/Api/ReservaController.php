@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Reserva;
 use App\Models\Funcion;
+use App\Models\Pelicula;
+use App\Models\Sala;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -12,16 +14,41 @@ class ReservaController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
-        
-        $reservas = Reserva::with(['funcion.pelicula', 'funcion.sala', 'user'])
-            ->where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        try {
+            $user = $request->user();
+            
+            if (!$user) {
+                return response()->json(['message' => 'No autenticado'], 401);
+            }
+            
+            // Cargar reservas con sus relaciones
+            $reservas = Reserva::where('user_id', $user->id)
+                ->get()
+                ->map(function($reserva) {
+                    // Cargar función de forma segura
+                    if ($reserva->funcion_id) {
+                        $funcion = Funcion::find($reserva->funcion_id);
+                        if ($funcion) {
+                            $reserva->funcion = $funcion;
+                            // Cargar película y sala de la función
+                            if ($funcion->pelicula_id) {
+                                $reserva->funcion->pelicula = Pelicula::find($funcion->pelicula_id);
+                            }
+                            if ($funcion->sala_id) {
+                                $reserva->funcion->sala = Sala::find($funcion->sala_id);
+                            }
+                        }
+                    }
+                    return $reserva;
+                });
 
-        return response()->json([
-            'data' => $reservas
-        ], 200);
+            return response()->json([
+                'data' => $reservas
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('Error al cargar reservas: ' . $e->getMessage());
+            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+        }
     }
 
     public function create()
@@ -93,12 +120,6 @@ class ReservaController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
-
-        // Verificar que el usuario sea el dueño de la reserva
-        if ($reserva->user_id !== $user->id && $user->role !== 'admin') {
-            return response()->json(['message' => 'No autorizado'], 403);
-        }
-
         return response()->json([
             'data' => $reserva
         ], 200);
@@ -116,109 +137,6 @@ class ReservaController extends Controller
         ]);
 
         $user = $request->user();
-        $reserva = Reserva::find($id);
-
-        if (!$reserva) {
-            return response()->json(['message' => 'Reserva no encontrada'], 404);
-        }
-
-        // Verificar autorización
-        if ($reserva->user_id !== $user->id && $user->role !== 'admin') {
-            return response()->json(['message' => 'No autorizado'], 403);
-        }
-
-        $reserva->update($request->only('estado'));
-
-        return response()->json([
-            'data' => $reserva,
-            'message' => 'Reserva actualizada'
-        ], 200);
-    }
-
-    public function destroy(Request $request, $id)
-    {
-        $user = $request->user();
-        $reserva = Reserva::find($id);
-
-        if (!$reserva) {
-            return response()->json(['message' => 'Reserva no encontrada'], 404);
-        }
-
-        // Verificar autorización
-        if ($reserva->user_id !== $user->id && $user->role !== 'admin') {
-            return response()->json(['message' => 'No autorizado'], 403);
-        }
-
-        // Solo permitir cancelación si está confirmada o pendiente
-        if (!in_array($reserva->estado, ['pendiente', 'confirmada'])) {
-            return response()->json(['message' => 'No se puede cancelar una reserva ' . $reserva->estado], 422);
-        }
-
-        $reserva->update(['estado' => 'cancelada']);
-
-        return response()->json([
-            'message' => 'Reserva cancelada'
-        ], 200);
-    }
-
-    /**
-     * ADMIN METHODS
-     */
-
-    /**
-     * Obtener todas las reservas (solo admin)
-     */
-    public function getAllReservas(Request $request)
-    {
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['message' => 'No autorizado'], 403);
-        }
-
-        $reservas = Reserva::with(['funcion.pelicula', 'funcion.sala', 'user'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return response()->json([
-            'data' => $reservas
-        ], 200);
-    }
-
-    /**
-     * Aprobar una reserva (admin)
-     */
-    public function approveReserva(Request $request, $id)
-    {
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['message' => 'No autorizado'], 403);
-        }
-
-        $reserva = Reserva::find($id);
-
-        if (!$reserva) {
-            return response()->json(['message' => 'Reserva no encontrada'], 404);
-        }
-
-        $reserva->update(['estado' => 'confirmada']);
-
-        return response()->json([
-            'message' => 'Reserva aprobada',
-            'data' => $reserva
-        ], 200);
-    }
-
-    /**
-     * Rechazar una reserva (admin)
-     */
-    public function rejectReserva(Request $request, $id)
-    {
-        $request->validate([
-            'razon' => 'nullable|string|max:255'
-        ]);
-
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['message' => 'No autorizado'], 403);
-        }
-
         $reserva = Reserva::find($id);
 
         if (!$reserva) {

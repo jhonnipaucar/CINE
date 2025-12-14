@@ -7,9 +7,9 @@ use App\Http\Controllers\Api\PeliculaController;
 use App\Http\Controllers\Api\FuncionController;
 use App\Http\Controllers\Api\GeneroController;
 use App\Http\Controllers\Api\ReservaController;
+use App\Http\Controllers\Api\AdminReservaController;
 use App\Http\Controllers\Api\SalaController;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\TMDbController;
 
 // Rutas de autenticación (públicas)
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -51,39 +51,46 @@ Route::delete('/user', function (Request $request) {
     return response()->json(['message' => 'Account deleted successfully']);
 })->middleware('auth:sanctum');
 
-// Rutas para Películas
-// Rutas para TMDb (públicas - sin autenticación requerida) - ANTES que apiResource
-Route::get('/peliculas-tmdb', [PeliculaController::class, 'indexTMDB']);
-Route::get('/peliculas-tmdb/search', [PeliculaController::class, 'searchTMDB']);
-Route::get('/peliculas-tmdb/{id}', [PeliculaController::class, 'showTMDB']);
-Route::get('/tmdb/generos', [PeliculaController::class, 'genresTMDB']);
-Route::get('/tmdb/generos/{genreId}/peliculas', [PeliculaController::class, 'genreMoviesTMDB']);
-
-// Rutas para Películas (DESPUÉS de rutas TMDB)
-Route::apiResource('peliculas', PeliculaController::class);
-Route::post('/peliculas/{id}/upload-imagen', [PeliculaController::class, 'uploadImage'])->middleware('auth:sanctum');
-
-// Rutas para Géneros
-Route::get('/generos/{id}/peliculas', [GeneroController::class, 'peliculas']);
-Route::apiResource('generos', GeneroController::class);
-
-// Rutas para Películas
-Route::post('/peliculas/{id}/upload-imagen', [PeliculaController::class, 'uploadImage'])->middleware('auth:sanctum');
-Route::apiResource('peliculas', PeliculaController::class);
-
-// Rutas para Salas
-Route::apiResource('salas', SalaController::class);
-
-// Rutas para Funciones
-Route::apiResource('funciones', FuncionController::class);
-
-// Rutas para Reservas (protegidas)
-Route::middleware(['auth:sanctum'])->group(function () {
+// Rutas protegidas con autenticación
+Route::middleware('auth:sanctum')->group(function () {
+    // Rutas para Películas (solo métodos que modifican datos)
+    Route::post('/peliculas', [PeliculaController::class, 'store']);
+    Route::put('/peliculas/{id}', [PeliculaController::class, 'update']);
+    Route::delete('/peliculas/{id}', [PeliculaController::class, 'destroy']);
+    
+    // Rutas para Géneros (solo métodos que modifican datos)
+    Route::post('/generos', [GeneroController::class, 'store']);
+    Route::put('/generos/{id}', [GeneroController::class, 'update']);
+    Route::delete('/generos/{id}', [GeneroController::class, 'destroy']);
+    
+    // Rutas para Salas (solo métodos que modifican datos)
+    Route::post('/salas', [SalaController::class, 'store']);
+    Route::put('/salas/{id}', [SalaController::class, 'update']);
+    Route::delete('/salas/{id}', [SalaController::class, 'destroy']);
+    
+    // Rutas para Funciones (solo métodos que modifican datos)
+    Route::post('/funciones', [FuncionController::class, 'store']);
+    Route::put('/funciones/{id}', [FuncionController::class, 'update']);
+    Route::delete('/funciones/{id}', [FuncionController::class, 'destroy']);
+    
+    // Rutas para Reservas
     Route::apiResource('reservas', ReservaController::class);
-
-    // Rutas Admin para Reservas (protegidas)
-    Route::get('/admin/reservas', [ReservaController::class, 'getAllReservas']);
-    Route::post('/admin/reservas/{id}/aprobar', [ReservaController::class, 'approveReserva']);
-    Route::post('/admin/reservas/{id}/rechazar', [ReservaController::class, 'rejectReserva']);
-    Route::delete('/admin/reservas/{id}', [ReservaController::class, 'deleteReserva']);
+    
+    // Rutas de Admin para Reservas
+    Route::prefix('admin')->group(function () {
+        Route::get('/reservas', [AdminReservaController::class, 'index']);
+        Route::put('/reservas/{id}', [AdminReservaController::class, 'update']);
+        Route::delete('/reservas/{id}', [AdminReservaController::class, 'destroy']);
+    });
 });
+
+// Rutas públicas (solo lectura)
+Route::get('/peliculas', [PeliculaController::class, 'index']);
+Route::get('/peliculas/{id}', [PeliculaController::class, 'show']);
+Route::get('/generos', [GeneroController::class, 'index']);
+Route::get('/generos/{id}', [GeneroController::class, 'show']);
+Route::get('/generos/{id}/peliculas', [GeneroController::class, 'peliculas']);
+Route::get('/salas', [SalaController::class, 'index']);
+Route::get('/salas/{id}', [SalaController::class, 'show']);
+Route::get('/funciones', [FuncionController::class, 'index']);
+Route::get('/funciones/{id}', [FuncionController::class, 'show']);

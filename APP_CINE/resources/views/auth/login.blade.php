@@ -430,14 +430,6 @@
             successMessage.classList.add('show');
         }
 
-        // Auto-llenar campos de prueba
-        document.addEventListener('DOMContentLoaded', function() {
-            const token = localStorage.getItem('auth_token');
-            if (token) {
-                window.location.href = '{{ route('dashboard') }}';
-            }
-        });
-
         // Permitir Enter en el password
         document.getElementById('password').addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {

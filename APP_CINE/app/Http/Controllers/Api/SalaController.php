@@ -11,7 +11,20 @@ class SalaController extends Controller
 {
     public function index()
     {
-        return response()->json(Sala::all(), 200);
+        $salas = Sala::with('funciones.reservas')
+            ->get()
+            ->map(function($sala) {
+                // Contar asientos ocupados por reservas confirmadas
+                $asientosOcupados = $sala->funciones
+                    ->flatMap(fn($funcion) => $funcion->reservas)
+                    ->filter(fn($reserva) => $reserva->estado === 'confirmada')
+                    ->count();
+                
+                $sala->asientos_ocupados = $asientosOcupados;
+                return $sala;
+            });
+
+        return response()->json(['data' => $salas], 200);
     }
 
     public function create()

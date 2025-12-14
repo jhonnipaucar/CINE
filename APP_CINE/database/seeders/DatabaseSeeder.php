@@ -57,7 +57,6 @@ class DatabaseSeeder extends Seeder
                 'sinopsis' => 'Los Vengadores se reúnen para derrotar a Thanos.',
                 'duracion' => 180,
                 'poster_url' => 'https://image.tmdb.org/t/p/original/endgame.jpg',
-                'tmdb_id' => 299534,
                 'generos' => ['Acción', 'Ciencia ficción']
             ],
             [
@@ -65,7 +64,6 @@ class DatabaseSeeder extends Seeder
                 'sinopsis' => 'Un payaso aterrador aterroriza a un pueblo.',
                 'duracion' => 135,
                 'poster_url' => 'https://image.tmdb.org/t/p/original/it.jpg',
-                'tmdb_id' => 346364,
                 'generos' => ['Terror']
             ],
             [
@@ -73,7 +71,6 @@ class DatabaseSeeder extends Seeder
                 'sinopsis' => 'Una historia de amor trágica en el famoso barco.',
                 'duracion' => 195,
                 'poster_url' => 'https://image.tmdb.org/t/p/original/titanic.jpg',
-                'tmdb_id' => 597,
                 'generos' => ['Drama', 'Romance']
             ]
         ];
@@ -83,8 +80,7 @@ class DatabaseSeeder extends Seeder
                 'titulo' => $pData['titulo'],
                 'sinopsis' => $pData['sinopsis'],
                 'duracion' => $pData['duracion'],
-                'poster_url' => $pData['poster_url'],
-                'tmdb_id' => $pData['tmdb_id']
+                'poster_url' => $pData['poster_url']
             ]);
 
             // Relación con géneros

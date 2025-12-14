@@ -18,7 +18,6 @@ return new class extends Migration
             $table->integer('duracion')->nullable(); // minutos
             $table->string('poster_url')->nullable();
             $table->integer('tmdb_id')->nullable();
-            $table->timestamps();
         });
     }
 
