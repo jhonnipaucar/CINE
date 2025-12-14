@@ -134,7 +134,8 @@
     <!-- Navbar -->
     <nav class="navbar">
         <div class="max-w-6xl mx-auto px-4 flex justify-between items-center">
-            <div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button onclick="window.history.back()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">← Atrás</button>
                 <h1 class="text-2xl font-bold">🎬 CINE App</h1>
             </div>
             <div class="flex gap-2 items-center">
@@ -209,7 +210,8 @@
                 
                 if (!response.ok) throw new Error('Error al cargar géneros');
                 
-                const generos = await response.json();
+                const data = await response.json();
+                const generos = data.data || data;
                 mostrarGeneros(generos);
             } catch (error) {
                 console.error('Error:', error);
@@ -221,8 +223,11 @@
         function mostrarGeneros(generos) {
             const container = document.getElementById('generosContainer');
             
-            if (generos.length === 0) {
-                container.innerHTML = '<p class="text-gray-600">No hay géneros disponibles</p>';
+            // Filtrar solo géneros que tienen películas disponibles
+            const generosConPeliculas = generos.filter(g => g.peliculas_count > 0);
+            
+            if (generosConPeliculas.length === 0) {
+                container.innerHTML = '<p class="text-gray-600">No hay géneros con películas disponibles</p>';
                 return;
             }
 
@@ -239,11 +244,11 @@
                 'Fantasía': '✨'
             };
 
-            container.innerHTML = generos.map(genero => `
+            container.innerHTML = generosConPeliculas.map(genero => `
                 <div class="genero-card" onclick="cargarPeliculasPorGenero(${genero.id}, '${genero.nombre}')">
                     <div class="genero-icon">${iconos[genero.nombre] || '🎬'}</div>
                     <h3 class="text-2xl font-bold">${genero.nombre}</h3>
-                    <p class="text-sm text-white/80 mt-2">${genero.peliculas_count || 0} películas</p>
+                    <p class="text-sm text-white/80 mt-2">${genero.peliculas_count} ${genero.peliculas_count === 1 ? 'película' : 'películas'}</p>
                 </div>
             `).join('');
         }
@@ -295,6 +300,11 @@
             `).join('');
             
             section.style.display = 'block';
+            
+            // Desplazarse automáticamente a la sección de películas
+            setTimeout(() => {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
         }
 
         function irAReservar(peliculaId, titulo) {

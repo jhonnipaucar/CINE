@@ -10,9 +10,7 @@ class FuncionController extends Controller
 {
     public function index()
     {
-        return response()->json([
-            'data' => Funcion::with(['pelicula', 'sala'])->get()
-        ], 200);
+        return response()->json(['data' => Funcion::with(['pelicula', 'sala', 'reservas'])->get()], 200);
     }
 
     public function create()
@@ -22,10 +20,15 @@ class FuncionController extends Controller
 
     public function store(Request $request)
     {
+        // Verificar si es admin
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'No tienes permiso para crear funciones'], 403);
+        }
+
         $request->validate([
             'pelicula_id' => 'required|exists:peliculas,id',
             'sala_id' => 'required|exists:salas,id',
-            'fecha' => 'required|date_format:Y-m-d H:i:s',
+            'fecha' => 'required|string',
             'precio' => 'required|numeric'
         ]);
 
@@ -49,6 +52,11 @@ class FuncionController extends Controller
 
     public function update(Request $request, $id)
     {
+        // Verificar si es admin
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'No tienes permiso para editar funciones'], 403);
+        }
+
         $funcion = Funcion::find($id);
 
         if (!$funcion) {
@@ -59,8 +67,13 @@ class FuncionController extends Controller
         return response()->json($funcion);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        // Verificar si es admin
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['message' => 'No tienes permiso para eliminar funciones'], 403);
+        }
+
         $funcion = Funcion::find($id);
 
         if (!$funcion) {

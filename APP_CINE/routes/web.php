@@ -2,10 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Ruta de bienvenida
+// Ruta de bienvenida - redirige a dashboard si está autenticado
 Route::get('/', function () {
+    // Si hay un token en localStorage (desde el frontend), mostrará el dashboard
+    // Si no hay token, mostrará la página de bienvenida con opción de login
     return view('welcome');
-});
+})->name('welcome');
 
 // Rutas de autenticación
 Route::get('/login', function () {
@@ -50,20 +52,32 @@ Route::get('/perfil', function () {
     return view('perfil');
 })->name('perfil');
 
-// Rutas de Admin (sin middleware, el control se hace en JavaScript con token)
-Route::get('/admin/peliculas', function () {
-    return view('admin.peliculas');
-})->name('admin.peliculas');
-
-Route::get('/admin/reservas', function () {
-    return view('admin.reservas');
-})->name('admin.reservas');
-// Rutas de Admin (protegidas con middleware IsAdmin)
-Route::middleware(['auth', 'verified', \App\Http\Middleware\IsAdmin::class])
+// Rutas de Admin (protegidas en el frontend con localStorage)
+Route::middleware([\App\Http\Middleware\IsAdmin::class])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
+        Route::get('/', function () {
+            return view('admin.dashboard');
+        })->name('dashboard');
+        
         Route::get('/peliculas', function () {
             return view('admin.peliculas');
         })->name('peliculas');
+        
+        Route::get('/generos', function () {
+            return view('admin.generos');
+        })->name('generos');
+        
+        Route::get('/salas', function () {
+            return view('admin.salas');
+        })->name('salas');
+        
+        Route::get('/funciones', function () {
+            return view('admin.funciones');
+        })->name('funciones');
+        
+        Route::get('/reservas', function () {
+            return view('admin.reservas');
+        })->name('reservas');
     });

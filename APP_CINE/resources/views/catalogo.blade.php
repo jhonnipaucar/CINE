@@ -362,6 +362,7 @@
     <nav class="bg-gradient-to-r from-blue-600 to-purple-700 text-white p-4 sticky top-0 z-40 shadow-lg">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
+                <button onclick="window.history.back()" class="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded-lg transition text-sm">← Atrás</button>
                 <span class="text-2xl">🎬</span>
                 <h1 class="text-xl font-bold">CINE App</h1>
             </div>
@@ -390,9 +391,6 @@
                     class="filtro-input"
                     onkeyup="buscarPelicula()"
                 >
-                <select id="filtroGenero" class="filtro-select" onchange="filtrar()">
-                    <option value="">Todos los géneros</option>
-                </select>
                 <button onclick="limpiarFiltros()" class="btn-filtro bg-gray-500 hover:bg-gray-600">
                     ✕ Limpiar
                 </button>
@@ -498,8 +496,6 @@
             try {
                 // Cargar películas de la BD local
                 const response = await fetch(`${API_URL}/peliculas`);
-                // Cargar películas de TMDB
-                const response = await fetch(`${API_URL}/peliculas-tmdb?type=popular&page=1`);
                 const data = await response.json();
 
                 if (response.ok) {
@@ -513,31 +509,6 @@
             } catch (error) {
                 console.error('Error:', error);
                 mostrarError('Error de conexión');
-                    // Cargar géneros de TMDB
-                    try {
-                        const genresResponse = await fetch(`${API_URL}/tmdb/generos`);
-                        const genresData = await genresResponse.json();
-                        generosDisponibles = genresData.data || [];
-
-                        // Llenar select de géneros
-                        const selectGenero = document.getElementById('filtroGenero');
-                        generosDisponibles.forEach(gen => {
-                            const option = document.createElement('option');
-                            option.value = gen.id;
-                            option.textContent = gen.name;
-                            selectGenero.appendChild(option);
-                        });
-                    } catch (genreError) {
-                        console.warn('Error cargando géneros:', genreError);
-                    }
-
-                    mostrarPeliculas(peliculasActuales);
-                } else {
-                    mostrarError('Error al cargar películas de TMDB');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                mostrarError('Error de conexión con TMDB');
             }
         }
 
@@ -646,47 +617,23 @@
         // Filtrar
         function filtrar() {
             const busqueda = document.getElementById('buscador').value.toLowerCase();
-            const generoId = document.getElementById('filtroGenero').value;
 
             peliculasActuales = peliculasOriginal.filter(p => {
-                const coincideBusqueda = p.titulo.toLowerCase().includes(busqueda);
-                // Para TMDB, los géneros es un array de IDs
-                const coincideGenero = !generoId || (Array.isArray(p.generos) && p.generos.includes(parseInt(generoId))) || (p.generos && p.generos.some(g => g.id == generoId));
-                return coincideBusqueda && coincideGenero;
+                return p.titulo.toLowerCase().includes(busqueda);
             });
 
             mostrarPeliculas(peliculasActuales);
         }
 
         // Buscar película
-        async function buscarPelicula() {
-            const busqueda = document.getElementById('buscador').value;
-            
-            if (busqueda.length < 2) {
-                cargarPeliculas();
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_URL}/peliculas-tmdb/search?q=${encodeURIComponent(busqueda)}`);
-                const data = await response.json();
-
-                if (response.ok) {
-                    peliculasActuales = data.data || [];
-                    mostrarPeliculas(peliculasActuales);
-                } else {
-                    mostrarError('Error en la búsqueda');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                mostrarError('Error de conexión');
-            }
+        function buscarPelicula() {
+            filtrar();
         }
 
         // Limpiar filtros
+        // Limpiar filtros
         function limpiarFiltros() {
             document.getElementById('buscador').value = '';
-            document.getElementById('filtroGenero').value = '';
             peliculasActuales = peliculasOriginal;
             mostrarPeliculas(peliculasActuales);
         }

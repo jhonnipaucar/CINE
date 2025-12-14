@@ -141,6 +141,7 @@
     <nav class="bg-gradient-to-r from-blue-600 to-purple-700 text-white p-4 shadow-lg">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
+                <button onclick="window.history.back()" class="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded-lg transition text-sm">← Atrás</button>
                 <span class="text-2xl">🎬</span>
                 <h1 class="text-xl font-bold">CINE App</h1>
             </div>
@@ -372,27 +373,6 @@
 
         // Cargar funciones disponibles
         async function cargarFunciones() {
-            document.getElementById('loaderFunciones').classList.remove('hidden');
-            document.getElementById('listadoFunciones').classList.add('hidden');
-            
-            try {
-                console.log('Cargando funciones desde:', API_URL + '/funciones');
-                const response = await fetch(`${API_URL}/funciones`);
-                
-                console.log('Respuesta status:', response.status);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log('Funciones cargadas:', data);
-
-                funciones = data.data || data;
-                mostrarFunciones();
-            } catch (error) {
-                console.error('Error al cargar funciones:', error);
-                mostrarErrorFunciones('Error: ' + error.message);
             try {
                 const response = await fetch(`${API_URL}/funciones`);
                 const data = await response.json();
@@ -413,7 +393,6 @@
         function mostrarFunciones() {
             const contenedor = document.getElementById('listadoFunciones');
             
-            if (!funciones || funciones.length === 0) {
             if (funciones.length === 0) {
                 contenedor.innerHTML = '<p class="text-gray-600">No hay funciones disponibles</p>';
                 contenedor.classList.remove('hidden');
@@ -422,32 +401,34 @@
             }
 
             contenedor.innerHTML = funciones.map((funcion, index) => {
+                // Parsear fecha y hora
+                let fechaFormato = 'N/A';
+                let horaFormato = 'N/A';
+                try {
+                    const fechaObj = new Date(funcion.fecha);
+                    if (!isNaN(fechaObj.getTime())) {
+                        fechaFormato = fechaObj.toLocaleDateString('es-ES');
+                        horaFormato = fechaObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    }
+                } catch (e) {
+                    console.log('Error al parsear fecha:', funcion.fecha);
+                }
+                
                 return `
-                    <div class="funcion-card" onclick="seleccionarFuncion(${index})">
-                        <h3 class="font-bold text-gray-800 mb-2">${funcion.pelicula.titulo}</h3>
-                        <div class="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
-                            <div>📅 ${new Date(funcion.fecha).toLocaleDateString('es-ES')}</div>
-                            <div>🕐 ${new Date(funcion.fecha).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}</div>
-                            <div>🪑 ${funcion.sala.nombre}</div>
-                            <div>💵 $${parseFloat(funcion.precio).toFixed(2)}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            contenedor.innerHTML = funciones.map((funcion, index) => `
                 <div class="funcion-card" onclick="seleccionarFuncion(${index})">
-                    <h3 class="font-bold text-gray-800 mb-2">${funcion.pelicula.titulo}</h3>
+                    <h3 class="font-bold text-gray-800 mb-2">${funcion.pelicula?.titulo || 'Película'}</h3>
                     <div class="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
-                        <div>📅 ${new Date(funcion.fecha).toLocaleDateString('es-ES')}</div>
-                        <div>🕐 ${funcion.hora}</div>
-                        <div>🪑 Sala ${funcion.sala.numero}</div>
+                        <div>📅 ${fechaFormato}</div>
+                        <div>🕐 ${horaFormato}</div>
+                        <div>🪑 ${funcion.sala?.nombre || 'Sala'}</div>
                         <div>💵 $${parseFloat(funcion.precio).toFixed(2)}</div>
                     </div>
                     <div class="text-xs text-gray-500">
                         ${funcion.asientos_disponibles} asientos disponibles
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
 
             contenedor.classList.remove('hidden');
             document.getElementById('loaderFunciones').classList.add('hidden');
@@ -469,11 +450,24 @@
             document.getElementById('noFuncionSeleccionada').classList.add('hidden');
             document.getElementById('resumenSeleccion').classList.add('hidden');
 
+            // Parsear fecha y hora
+            let fechaFormato = 'N/A';
+            let horaFormato = 'N/A';
+            try {
+                const fechaObj = new Date(funcionSeleccionada.fecha);
+                if (!isNaN(fechaObj.getTime())) {
+                    fechaFormato = fechaObj.toLocaleDateString('es-ES');
+                    horaFormato = fechaObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                }
+            } catch (e) {
+                console.log('Error al parsear fecha:', funcionSeleccionada.fecha);
+            }
+
             // Actualizar info de función
-            document.getElementById('seleccionPelicula').textContent = funcionSeleccionada.pelicula.titulo;
-            document.getElementById('seleccionFecha').textContent = new Date(funcionSeleccionada.fecha).toLocaleDateString('es-ES');
-            document.getElementById('seleccionHora').textContent = funcionSeleccionada.hora;
-            document.getElementById('seleccionSala').textContent = `Sala ${funcionSeleccionada.sala.numero}`;
+            document.getElementById('seleccionPelicula').textContent = funcionSeleccionada.pelicula?.titulo || 'Película';
+            document.getElementById('seleccionFecha').textContent = fechaFormato;
+            document.getElementById('seleccionHora').textContent = horaFormato;
+            document.getElementById('seleccionSala').textContent = funcionSeleccionada.sala?.nombre || 'Sala';
 
             // Generar mapa de asientos
             generarMapaAsientos();
@@ -565,38 +559,18 @@
             const datos = {
                 funcion_id: funcionSeleccionada.id,
                 asientos: asientosSeleccionados,
-                estado: 'confirmada'
+                estado: 'pendiente'
             };
-
-            const token = localStorage.getItem('auth_token');
-
-            if (!token) {
-                alert('Debes estar logueado para hacer una reserva');
-                window.location.href = '{{ route('login') }}';
-                return;
-            }
-
-            try {
-                console.log('Enviando reserva a:', `${API_URL}/reservas`);
-                console.log('Datos:', datos);
 
             try {
                 const response = await fetch(`${API_URL}/reservas`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(datos)
                 });
-
-                console.log('Respuesta status:', response.status);
-
-                const data = await response.json();
-
-                console.log('Datos de respuesta:', data);
 
                 const data = await response.json();
 
@@ -605,13 +579,12 @@
                     limpiarSeleccion();
                     setTimeout(() => {
                         cargarFunciones();
+                        actualizarDatosSalas(); // Actualizar datos de salas después de la reserva
                     }, 2000);
                 } else {
                     alert('Error: ' + (data.message || 'Error desconocido'));
                 }
             } catch (error) {
-                console.error('Error completo:', error);
-                alert('Error de conexión: ' + error.message);
                 console.error('Error:', error);
                 alert('Error de conexión');
             }
@@ -664,6 +637,7 @@
 
             contenedor.innerHTML = reservas.map(reserva => {
                 const fecha = new Date(reserva.funcion.fecha);
+                const hora = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
                 const estado = {
                     'pendiente': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '⏳ Pendiente' },
                     'confirmada': { bg: 'bg-green-100', text: 'text-green-800', label: '✅ Confirmada' },
@@ -676,8 +650,8 @@
                             <h3 class="font-bold text-lg text-gray-800 mb-2">${reserva.funcion.pelicula.titulo}</h3>
                             <div class="space-y-2 text-sm text-gray-600 mb-4">
                                 <div>📅 ${fecha.toLocaleDateString('es-ES')}</div>
-                                <div>🕐 ${reserva.funcion.hora}</div>
-                                <div>🪑 Sala ${reserva.funcion.sala.numero} - Asiento ${reserva.numero_asiento}</div>
+                                <div>🕐 ${hora}</div>
+                                <div>🪑 Sala ${reserva.funcion.sala?.nombre || 'Desconocida'} - Asiento ${reserva.numero_asiento}</div>
                                 <div>💵 $${parseFloat(reserva.precio).toFixed(2)}</div>
                             </div>
                             <div class="mb-4">
@@ -690,7 +664,7 @@
                                     onclick="cancelarReserva(${reserva.id})"
                                     class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
                                 >
-                                    Cancelar Reserva
+                                    🗑 Eliminar Reserva
                                 </button>
                             ` : ''}
                         </div>
@@ -703,7 +677,7 @@
 
         // Cancelar reserva
         async function cancelarReserva(reservaId) {
-            if (!confirm('¿Estás seguro de que deseas cancelar esta reserva?')) {
+            if (!confirm('¿Estás seguro de que deseas eliminar esta reserva?')) {
                 return;
             }
 
@@ -718,10 +692,10 @@
                 });
 
                 if (response.ok) {
-                    alert('Reserva cancelada');
+                    alert('Reserva eliminada');
                     cargarMisReservas();
                 } else {
-                    alert('Error al cancelar reserva');
+                    alert('Error al eliminar reserva');
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -740,6 +714,26 @@
         function mostrarExito(asientos) {
             document.getElementById('textoExito').textContent = `Has reservado los asientos: ${asientos}`;
             document.getElementById('modalExito').classList.remove('hidden');
+        }
+
+        // Actualizar datos de salas después de una reserva
+        async function actualizarDatosSalas() {
+            try {
+                const response = await fetch(`${API_URL}/salas`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Los datos se actualizan en el archivo salas.blade.php
+                    // Esto es solo para mantener sincronizados los datos
+                    console.log('Datos de salas actualizados');
+                } else {
+                    console.error('Error al actualizar salas');
+                }
+            } catch (error) {
+                console.error('Error al actualizar salas:', error);
+            }
         }
 
         // Cerrar modal éxito

@@ -160,7 +160,8 @@
     <!-- Navbar -->
     <nav class="navbar">
         <div class="max-w-6xl mx-auto px-4 flex justify-between items-center">
-            <div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button onclick="window.history.back()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">← Atrás</button>
                 <h1 class="text-2xl font-bold">🎬 CINE App</h1>
             </div>
             <div class="flex gap-2 items-center">
@@ -181,32 +182,6 @@
         <div class="mb-8 mt-8">
             <h2 class="text-4xl font-bold text-gray-800 mb-4">🕐 Funciones Disponibles</h2>
             <p class="text-gray-600">Consulta los horarios disponibles para cada película</p>
-        </div>
-
-        <!-- Filtros -->
-        <div class="filtros">
-            <div class="filtro-grupo">
-                <label>Película:</label>
-                <select id="filtroJelícula" onchange="filtrarFunciones()">
-                    <option value="">Todas las películas</option>
-                </select>
-            </div>
-            <div class="filtro-grupo">
-                <label>Sala:</label>
-                <select id="filtroSala" onchange="filtrarFunciones()">
-                    <option value="">Todas las salas</option>
-                </select>
-            </div>
-            <div class="filtro-grupo">
-                <label>Fecha:</label>
-                <input type="date" id="filtroFecha" onchange="filtrarFunciones()">
-            </div>
-            <div class="filtro-grupo">
-                <label>&nbsp;</label>
-                <button onclick="limpiarFiltros()" class="bg-gray-400 text-white px-4 py-2 rounded-6 hover:bg-gray-500">
-                    Limpiar filtros
-                </button>
-            </div>
         </div>
 
         <!-- Contenedor de funciones -->
@@ -254,36 +229,14 @@
                 
                 if (!response.ok) throw new Error('Error al cargar funciones');
                 
-                todasLasFunciones = await response.json();
-                llenarFiltros();
+                const data = await response.json();
+                todasLasFunciones = data.data || data;
                 mostrarFunciones(todasLasFunciones);
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('funcionesContainer').innerHTML = 
                     '<p class="text-red-500">Error al cargar las funciones</p>';
             }
-        }
-
-        function llenarFiltros() {
-            // Llenar películas
-            const peliculas = [...new Set(todasLasFunciones.map(f => f.pelicula).filter(Boolean))];
-            const selectPeliculas = document.getElementById('filtroJelícula');
-            peliculas.forEach(pelicula => {
-                const option = document.createElement('option');
-                option.value = pelicula.id;
-                option.textContent = pelicula.titulo;
-                selectPeliculas.appendChild(option);
-            });
-
-            // Llenar salas
-            const salas = [...new Set(todasLasFunciones.map(f => f.sala).filter(Boolean))];
-            const selectSalas = document.getElementById('filtroSala');
-            salas.forEach(sala => {
-                const option = document.createElement('option');
-                option.value = sala.id;
-                option.textContent = `${sala.nombre} (${sala.capacidad} asientos)`;
-                selectSalas.appendChild(option);
-            });
         }
 
         function mostrarFunciones(funciones) {
@@ -296,8 +249,19 @@
 
             container.innerHTML = funciones.map(funcion => {
                 const disponible = funcion.asientos_disponibles > 0;
-                const fecha = new Date(funcion.fecha_hora).toLocaleDateString('es-ES');
-                const hora = new Date(funcion.fecha_hora).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                
+                // Parsear fecha - puede venir en varios formatos
+                let fecha = 'Invalid Date';
+                let hora = 'Invalid Date';
+                try {
+                    const fechaObj = new Date(funcion.fecha);
+                    if (!isNaN(fechaObj.getTime())) {
+                        fecha = fechaObj.toLocaleDateString('es-ES');
+                        hora = fechaObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    }
+                } catch (e) {
+                    console.log('Error al parsear fecha:', funcion.fecha, e);
+                }
                 
                 return `
                     <div class="funcion-card fade-in">
@@ -336,38 +300,6 @@
             }).join('');
         }
 
-        function filtrarFunciones() {
-            const peliculaId = document.getElementById('filtroJelícula').value;
-            const salaId = document.getElementById('filtroSala').value;
-            const fecha = document.getElementById('filtroFecha').value;
-
-            let funcionesFiltradas = todasLasFunciones;
-
-            if (peliculaId) {
-                funcionesFiltradas = funcionesFiltradas.filter(f => f.pelicula_id === parseInt(peliculaId));
-            }
-
-            if (salaId) {
-                funcionesFiltradas = funcionesFiltradas.filter(f => f.sala_id === parseInt(salaId));
-            }
-
-            if (fecha) {
-                funcionesFiltradas = funcionesFiltradas.filter(f => {
-                    const fechaFuncion = new Date(f.fecha_hora).toISOString().split('T')[0];
-                    return fechaFuncion === fecha;
-                });
-            }
-
-            mostrarFunciones(funcionesFiltradas);
-        }
-
-        function limpiarFiltros() {
-            document.getElementById('filtroJelícula').value = '';
-            document.getElementById('filtroSala').value = '';
-            document.getElementById('filtroFecha').value = '';
-            mostrarFunciones(todasLasFunciones);
-        }
-
         function irAReservar(peliculaId) {
             localStorage.setItem('peliculaSeleccionada', JSON.stringify({ id: peliculaId }));
             window.location.href = '/reservas';
@@ -384,10 +316,6 @@
         window.addEventListener('load', () => {
             verificarAdmin();
             cargarFunciones();
-
-            // Establecer fecha mínima a hoy
-            const hoy = new Date().toISOString().split('T')[0];
-            document.getElementById('filtroFecha').min = hoy;
         });
     </script>
 </body>

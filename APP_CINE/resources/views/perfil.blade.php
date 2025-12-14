@@ -295,7 +295,8 @@
     <!-- Navbar -->
     <nav class="navbar">
         <div class="max-w-6xl mx-auto px-4 flex justify-between items-center">
-            <div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button onclick="window.history.back()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">← Atrás</button>
                 <h1 class="text-2xl font-bold">🎬 CINE App</h1>
             </div>
             <div class="flex gap-2 items-center">
